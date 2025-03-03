@@ -34,17 +34,20 @@ func main() {
 		fuego.Get(api, "/about", a.GetAbout)
 		fuego.Put(api, "/about", a.PutAbout)
 
-		fuego.Get(api,
-			"/hero_images",
-			a.GetHeroImages,
-			option.QueryInt(
-				"amount",
-				"Number of images to fetch",
-				param.Default(10),
-				param.Example("latest 10 images", 10),
-			),
-		)
-		fuego.Post(api, "/hero_images", a.PostHeroImage)
+		heroImages := fuego.Group(api, "/hero_images")
+		{
+			fuego.Get(heroImages,
+				"",
+				a.GetHeroImages,
+				option.QueryInt(
+					"amount",
+					"Number of images to fetch",
+					param.Default(10),
+					param.Example("latest 10 images", 10),
+				),
+			)
+			fuego.Post(heroImages, "", a.PostHeroImage)
+		}
 
 		faculties := fuego.Group(api, "/faculties")
 		{
