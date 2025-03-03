@@ -32,7 +32,7 @@ func main() {
 	api := fuego.Group(s, "/api")
 	{ // API Routes
 		fuego.Get(api, "/about", a.GetAbout)
-		fuego.Post(api, "/about", a.PostAbout)
+		fuego.Put(api, "/about", a.PutAbout)
 
 		fuego.Get(api,
 			"/hero_images",
@@ -49,6 +49,7 @@ func main() {
 		faculties := fuego.Group(api, "/faculties")
 		{
 			fuego.Get(faculties, "", a.GetFaculties)
+			fuego.Post(faculties, "", a.PostFacutly)
 		}
 	}
 
@@ -89,7 +90,7 @@ func (a *app) GetAbout(c fuego.ContextNoBody) (d.AboutSection, error) {
 	return section, nil
 }
 
-func (a *app) PostAbout(c fuego.ContextWithBody[d.AboutSection]) (d.AboutSection, error) {
+func (a *app) PutAbout(c fuego.ContextWithBody[d.AboutSection]) (d.AboutSection, error) {
 	body, err := c.Body()
 	if err != nil {
 		return d.AboutSection{}, err
@@ -137,6 +138,20 @@ func (a *app) GetFaculties(c fuego.ContextNoBody) (d.Faculties, error) {
 	}
 
 	return faculites, nil
+}
+
+func (a *app) PostFacutly(c fuego.ContextWithBody[d.Faculty]) (d.Faculty, error) {
+	body, err := c.Body()
+	if err != nil {
+		return d.Faculty{}, err
+	}
+
+	faculty, err := a.db.InsertFaculty(body)
+	if err != nil {
+		return d.Faculty{}, err
+	}
+
+	return faculty, nil
 }
 
 func (a *app) helloWorld(c fuego.ContextNoBody) (string, error) {
