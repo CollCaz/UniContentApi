@@ -6,9 +6,8 @@ import (
 	"os"
 
 	d "github.com/CollCaz/UniSite/database"
+	"github.com/charmbracelet/log"
 	"github.com/go-fuego/fuego"
-	"github.com/go-fuego/fuego/option"
-	"github.com/go-fuego/fuego/param"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,9 +15,13 @@ import (
 func main() {
 	godotenv.Load(".env", ".envrc")
 	db := openDb()
-	s := fuego.NewServer()
 
-	logger := slog.Default()
+	handler := log.New(os.Stderr)
+	logger := slog.New(handler)
+
+	s = fuego.NewServer(
+		fuego.WithLogHandler(handler),
+	)
 	a := &app{
 		logger: logger,
 		db: d.NewDataService(d.NewDataServiceArgs{
@@ -27,37 +30,7 @@ func main() {
 		}),
 	}
 
-	fuego.Get(s, "/", a.helloWorld)
-
-	api := fuego.Group(s, "/api")
-	{ // API Routes
-		about := fuego.Group(api, "/about")
-		{
-			fuego.Get(about, "", a.GetAbout)
-			fuego.Put(about, "", a.PutAbout)
-		}
-
-		heroImages := fuego.Group(api, "/hero_images")
-		{
-			fuego.Get(heroImages,
-				"",
-				a.GetHeroImages,
-				option.QueryInt(
-					"amount",
-					"Number of images to fetch",
-					param.Default(10),
-					param.Example("latest 10 images", 10),
-				),
-			)
-			fuego.Post(heroImages, "", a.PostHeroImage)
-		}
-
-		faculties := fuego.Group(api, "/faculties")
-		{
-			fuego.Get(faculties, "", a.GetFaculties)
-			fuego.Post(faculties, "", a.PostFacutly)
-		}
-	}
+	a.registerRoutes()
 
 	s.Run()
 }
