@@ -31,8 +31,11 @@ func main() {
 
 	api := fuego.Group(s, "/api")
 	{ // API Routes
-		fuego.Get(api, "/about", a.GetAbout)
-		fuego.Put(api, "/about", a.PutAbout)
+		about := fuego.Group(api, "/about")
+		{
+			fuego.Get(about, "", a.GetAbout)
+			fuego.Put(about, "", a.PutAbout)
+		}
 
 		heroImages := fuego.Group(api, "/hero_images")
 		{
@@ -150,6 +153,20 @@ func (a *app) PostFacutly(c fuego.ContextWithBody[d.Faculty]) (d.Faculty, error)
 	}
 
 	faculty, err := a.db.InsertFaculty(body)
+	if err != nil {
+		return d.Faculty{}, err
+	}
+
+	return faculty, nil
+}
+
+func (a *app) PutFaculty(c fuego.ContextWithBody[d.UpdateFaculty]) (d.Faculty, error) {
+	body, err := c.Body()
+	if err != nil {
+		return d.Faculty{}, err
+	}
+
+	faculty, err := a.db.UpdateFaculty(body)
 	if err != nil {
 		return d.Faculty{}, err
 	}

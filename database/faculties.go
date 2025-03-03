@@ -72,16 +72,21 @@ func (d *DataService) InsertFaculty(f Faculty) (Faculty, error) {
 	return d.scanFaculty(stmt)
 }
 
-func (d *DataService) UpdateFaculty(name string, f Faculty) (Faculty, error) {
+type UpdateFaculty struct {
+	Name    string
+	Faculty Faculty
+}
+
+func (d *DataService) UpdateFaculty(args UpdateFaculty) (Faculty, error) {
 	stmt := t.Faculty.
 		UPDATE(
 			t.Faculty.Name,
 			t.Faculty.Abbreviation,
 		).SET(
-		f.Name,
-		f.Abbreviation,
+		args.Faculty.Name,
+		args.Faculty.Abbreviation,
 	).WHERE(
-		t.Faculty.Name.EQ(s.String(f.Name)),
+		t.Faculty.Name.EQ(s.String(args.Name)),
 	)
 
 	return d.scanFaculty(stmt)
