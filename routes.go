@@ -38,6 +38,14 @@ func (a *app) registerRoutes() {
 		{
 			fuego.Get(faculties, "", a.GetFaculties)
 			fuego.Post(faculties, "", a.PostFacutly)
+			fuego.Put(faculties, "", a.PutFaculty)
+		}
+
+		departments := fuego.Group(api, "/department")
+		{
+			fuego.Get(departments, "", a.GetAllDepartments)
+			fuego.Post(departments, "", a.PostDepartment)
+			fuego.Put(departments, "", a.PutDepartment)
 		}
 	}
 }
