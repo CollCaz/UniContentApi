@@ -23,6 +23,7 @@ db.sqlite
 # Go workspace file
 go.work
 tmp/
+doc/
 
 # IDE specific files
 .vscode
