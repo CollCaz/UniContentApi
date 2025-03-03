@@ -87,6 +87,9 @@ func (d *DataService) UpdateFaculty(args UpdateFaculty) (Faculty, error) {
 		args.Faculty.Abbreviation,
 	).WHERE(
 		t.Faculty.Name.EQ(s.String(args.Name)),
+	).RETURNING(
+		t.Faculty.Name,
+		t.Faculty.Abbreviation,
 	)
 
 	return d.scanFaculty(stmt)
