@@ -7,12 +7,7 @@ import (
 
 func (a *app) GetHeroImages(c fuego.ContextWithBody[d.GetHeroImagesArgs]) (d.HeroImages, error) {
 	amount := c.QueryParamInt("amount")
-	heroImages, err := a.db.GetHeroImages(d.GetHeroImagesArgs{Amount: amount})
-	if err != nil {
-		return nil, err
-	}
-
-	return heroImages, nil
+	return a.db.GetHeroImages(d.GetHeroImagesArgs{Amount: amount})
 }
 
 func (a *app) PostHeroImage(c fuego.ContextWithBody[d.HeroImage]) (d.HeroImage, error) {
@@ -22,12 +17,6 @@ func (a *app) PostHeroImage(c fuego.ContextWithBody[d.HeroImage]) (d.HeroImage, 
 		return d.HeroImage{}, err
 	}
 
-	heroImage, err := a.db.InsertHeroImage(body)
-	if err != nil {
-		a.logger.Error(err.Error())
-		return d.HeroImage{}, err
-	}
-
-	return heroImage, nil
+	return a.db.InsertHeroImage(body)
 
 }
