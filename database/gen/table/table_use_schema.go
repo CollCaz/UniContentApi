@@ -12,6 +12,8 @@ package table
 func UseSchema(schema string) {
 	AboutSection = AboutSection.FromSchema(schema)
 	Department = Department.FromSchema(schema)
+	Event = Event.FromSchema(schema)
+	EventData = EventData.FromSchema(schema)
 	Faculty = Faculty.FromSchema(schema)
 	GooseDbVersion = GooseDbVersion.FromSchema(schema)
 	HeroImages = HeroImages.FromSchema(schema)
