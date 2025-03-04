@@ -19,6 +19,7 @@ func (d *DataService) scanDepartment(stmt s.Statement) (Department, error) {
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
+		d.logger.Info(stmt.DebugSql())
 		return Department{}, err
 	}
 
@@ -35,6 +36,7 @@ func (d *DataService) scanDepartments(stmt s.Statement) (Departments, error) {
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
+		d.logger.Info(stmt.DebugSql())
 		return Departments{}, err
 	}
 

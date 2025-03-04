@@ -16,6 +16,7 @@ func (d *DataService) scanFaculty(stmt s.Statement) (Faculty, error) {
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
+		d.logger.Info(stmt.DebugSql())
 		return Faculty{}, err
 	}
 
@@ -32,6 +33,7 @@ func (d *DataService) scanFaculties(stmt s.Statement) (Faculties, error) {
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
+		d.logger.Info(stmt.DebugSql())
 		return Faculties{}, err
 	}
 

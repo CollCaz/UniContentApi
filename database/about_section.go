@@ -11,6 +11,25 @@ type AboutSection struct {
 	Content string
 }
 
+func (d *DataService) scanAboutSection(stmt s.Statement) (AboutSection, error) {
+	dest := model.AboutSection{}
+
+	err := stmt.Query(d.db, &dest)
+	if err != nil {
+		d.logger.Error(err.Error())
+		d.logger.Info(stmt.DebugSql())
+		return AboutSection{}, err
+	}
+
+	d.logger.Info(dest.Content)
+
+	res := AboutSection{
+		Title:   dest.Title,
+		Content: dest.Content,
+	}
+	return res, nil
+}
+
 func (d *DataService) UpdateAboutSection(args AboutSection) (AboutSection, error) {
 	stmt := t.AboutSection.INSERT(
 		t.AboutSection.Title,
@@ -20,23 +39,8 @@ func (d *DataService) UpdateAboutSection(args AboutSection) (AboutSection, error
 		args.Content,
 	).RETURNING(t.AboutSection.Title, t.AboutSection.Content)
 
-	dest := model.AboutSection{}
+	return d.scanAboutSection(stmt)
 
-	d.logger.Info(stmt.Sql())
-	err := stmt.Query(d.db, &dest)
-	if err != nil {
-		d.logger.Error(err.Error())
-		return AboutSection{}, err
-	}
-
-	d.logger.Info(dest.Content)
-
-	res := AboutSection{
-		Title:   dest.Title,
-		Content: dest.Content,
-	}
-
-	return res, nil
 }
 
 func (d *DataService) GetAboutSection() (AboutSection, error) {
@@ -45,21 +49,5 @@ func (d *DataService) GetAboutSection() (AboutSection, error) {
 		t.AboutSection.Content,
 	).FROM(t.AboutSection).LIMIT(1)
 
-	dest := model.AboutSection{}
-
-	d.logger.Info(stmt.Sql())
-	err := stmt.Query(d.db, &dest)
-	if err != nil {
-		d.logger.Error(err.Error())
-		return AboutSection{}, err
-	}
-
-	d.logger.Info(dest.Content)
-
-	res := AboutSection{
-		Title:   dest.Title,
-		Content: dest.Content,
-	}
-
-	return res, nil
+	return d.scanAboutSection(stmt)
 }
