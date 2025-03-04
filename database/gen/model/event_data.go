@@ -9,7 +9,8 @@ package model
 
 type EventData struct {
 	ID       *int32 `sql:"primary_key"`
-	EventID  *int32
+	EventID  int32
 	Language string
+	Name     string
 	Content  string
 }

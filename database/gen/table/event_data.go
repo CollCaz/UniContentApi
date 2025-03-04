@@ -20,6 +20,7 @@ type eventDataTable struct {
 	ID       sqlite.ColumnInteger
 	EventID  sqlite.ColumnInteger
 	Language sqlite.ColumnString
+	Name     sqlite.ColumnString
 	Content  sqlite.ColumnString
 
 	AllColumns     sqlite.ColumnList
@@ -64,9 +65,10 @@ func newEventDataTableImpl(schemaName, tableName, alias string) eventDataTable {
 		IDColumn       = sqlite.IntegerColumn("id")
 		EventIDColumn  = sqlite.IntegerColumn("event_id")
 		LanguageColumn = sqlite.StringColumn("language")
+		NameColumn     = sqlite.StringColumn("name")
 		ContentColumn  = sqlite.StringColumn("content")
-		allColumns     = sqlite.ColumnList{IDColumn, EventIDColumn, LanguageColumn, ContentColumn}
-		mutableColumns = sqlite.ColumnList{EventIDColumn, LanguageColumn, ContentColumn}
+		allColumns     = sqlite.ColumnList{IDColumn, EventIDColumn, LanguageColumn, NameColumn, ContentColumn}
+		mutableColumns = sqlite.ColumnList{EventIDColumn, LanguageColumn, NameColumn, ContentColumn}
 	)
 
 	return eventDataTable{
@@ -76,6 +78,7 @@ func newEventDataTableImpl(schemaName, tableName, alias string) eventDataTable {
 		ID:       IDColumn,
 		EventID:  EventIDColumn,
 		Language: LanguageColumn,
+		Name:     NameColumn,
 		Content:  ContentColumn,
 
 		AllColumns:     allColumns,
