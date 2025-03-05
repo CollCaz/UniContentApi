@@ -9,20 +9,31 @@ import (
 	s "github.com/go-jet/jet/v2/sqlite"
 )
 
+type EventData struct {
+	Id       int32 `json:",omitempty"`
+	Name     string
+	Content  string
+	Language string `validate:"required,bcp47_language_tag"`
+}
+
 type Event struct {
+	Id        int32 `json:",omitempty"`
 	StarDate  time.Time
 	EndDate   time.Time
 	Location  string
 	PosterUrl string `validate:"url"`
-	Name      string
-	Content   string
-	Language  string `validate:"required,bcp47_language_tag"`
+	EventData EventData
 }
 
 type Events []Event
 
+type joinedEventModel struct {
+	model.Event
+	model.EventData
+}
+
 func (d *DataService) scanEvent(stmt s.Statement) (Event, error) {
-	dest := model.Event{}
+	dest := joinedEventModel{}
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
@@ -31,29 +42,28 @@ func (d *DataService) scanEvent(stmt s.Statement) (Event, error) {
 	}
 
 	event := Event{
+		Id:        *dest.Event.ID,
 		StarDate:  *dest.StartDate,
 		EndDate:   *dest.EndDate,
 		Location:  dest.Location,
 		PosterUrl: dest.PosterURL,
+		EventData: EventData{
+			Id:       *dest.EventData.ID,
+			Name:     dest.Name,
+			Content:  dest.Content,
+			Language: dest.Language,
+		},
 	}
 
 	return event, nil
 }
 
-func (d *DataService) scanEvents(eventStmt s.Statement, dataStmt s.Statement) (Events, error) {
-	dest := []model.Event{}
-	err := eventStmt.Query(d.db, &dest)
+func (d *DataService) scanEvents(stmt s.Statement) (Events, error) {
+	dest := []joinedEventModel{}
+	err := stmt.Query(d.db, &dest)
 	if err != nil {
 		d.logger.Error(err.Error())
-		d.logger.Info(eventStmt.DebugSql())
-		return Events{}, err
-	}
-
-	dest2 := []model.EventData{}
-	err = dataStmt.Query(d.db, &dest2)
-	if err != nil {
-		d.logger.Error(err.Error())
-		d.logger.Info(eventStmt.DebugSql())
+		d.logger.Info(stmt.DebugSql())
 		return Events{}, err
 	}
 
@@ -64,6 +74,11 @@ func (d *DataService) scanEvents(eventStmt s.Statement, dataStmt s.Statement) (E
 			EndDate:   *event.EndDate,
 			Location:  event.Location,
 			PosterUrl: event.PosterURL,
+			EventData: EventData{
+				Name:     event.Name,
+				Content:  event.Content,
+				Language: event.Language,
+			},
 		})
 
 	}
@@ -77,9 +92,12 @@ type GetAllEventsArgs struct {
 func (d *DataService) GetAllEvents(args GetAllEventsArgs) (Events, error) {
 	stmt := s.
 		SELECT(
+			t.Event.ID,
 			t.Event.StartDate,
 			t.Event.EndDate,
 			t.Event.PosterURL,
+			t.EventData.ID,
+			t.EventData.Name,
 			t.EventData.Content,
 			t.EventData.Language,
 		).FROM(
@@ -102,6 +120,7 @@ func (d *DataService) InsertEvent(e Event) (Event, error) {
 		e.PosterUrl,
 		e.Location,
 	).RETURNING(
+		t.Event.ID,
 		t.Event.StartDate,
 		t.Event.EndDate,
 		t.Event.PosterURL,
@@ -112,34 +131,93 @@ func (d *DataService) InsertEvent(e Event) (Event, error) {
 		return Event{}, err
 	}
 
-	insertEventDataStmt := t.EventData.
+	insertDataStmt := t.EventData.
 		INSERT(
 			t.EventData.Name,
 			t.EventData.Content,
 			t.EventData.Language,
+			t.EventData.EventID,
 		).VALUES(
-		e.Name,
-		e.Content,
-		e.Language,
+		e.EventData.Name,
+		e.EventData.Content,
+		e.EventData.Language,
+		event.Id,
 	).RETURNING(
 		t.EventData.Name,
 		t.EventData.Content,
 		t.EventData.Language,
+		t.EventData.EventID,
 	)
 
-	eventData, err := d.scanEvent(insertEventDataStmt)
-
-	mergedEvent := Event{
-		Location:  event.Location,
-		PosterUrl: event.PosterUrl,
-		StarDate:  event.StarDate,
-		EndDate:   event.EndDate,
-		Name:      eventData.Name,
-		Content:   eventData.Content,
-		Language:  eventData.Content,
+	data, err := d.scanEvent(insertDataStmt)
+	if err != nil {
+		return Event{}, err
 	}
 
-	return mergedEvent, nil
+	event.EventData = data.EventData
+	return event, nil
+}
+
+type UpdateEventArgs struct {
+	Id  int32
+	New Event
+}
+
+func (d *DataService) UpdateEvent(args UpdateEventArgs) (Event, error) {
+	insertEventStmt := t.Event.
+		UPDATE(
+			t.Event.StartDate,
+			t.Event.EndDate,
+			t.Event.PosterURL,
+			t.Event.Location,
+		).
+		SET(
+			args.New.StarDate,
+			args.New.EndDate,
+			args.New.PosterUrl,
+			args.New.Location,
+		).
+		WHERE(t.Event.ID.EQ(s.Int32(args.Id))).
+		RETURNING(
+			t.Event.ID,
+			t.Event.StartDate,
+			t.Event.EndDate,
+			t.Event.PosterURL,
+		)
+
+	event, err := d.scanEvent(insertEventStmt)
+	if err != nil {
+		return Event{}, err
+	}
+
+	insertDataStmt := t.EventData.
+		UPDATE(
+			t.EventData.Name,
+			t.EventData.Content,
+			t.EventData.Language,
+			t.EventData.EventID,
+		).
+		SET(
+			args.New.EventData.Name,
+			args.New.EventData.Content,
+			args.New.EventData.Language,
+			event.Id,
+		).
+		WHERE(t.EventData.ID.EQ(s.Int32(args.Id))).
+		RETURNING(
+			t.EventData.Name,
+			t.EventData.Content,
+			t.EventData.Language,
+			t.EventData.EventID,
+		)
+
+	data, err := d.scanEvent(insertDataStmt)
+	if err != nil {
+		return Event{}, err
+	}
+
+	event.EventData = data.EventData
+	return event, nil
 }
 
 type SearchAllEventArgs struct {
@@ -159,44 +237,56 @@ func (d *DataService) SearchAllEvents(args SearchAllEventArgs) (Events, error) {
 			t.EventData.Name,
 			t.EventData.Content,
 			t.EventData.Language,
-		).FROM(
-		t.Event.INNER_JOIN(t.EventData, t.Event.ID.EQ(t.EventData.EventID)),
-	).WHERE(
-		s.AND(
-			t.EventData.Language.EQ(s.String(args.Language)),
-			s.OR(
-				t.EventData.Name.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
-				t.Event.Location.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
+		).
+		FROM(
+			t.Event.INNER_JOIN(t.EventData, t.Event.ID.EQ(t.EventData.EventID)),
+		).
+		WHERE(
+			s.AND(
+				t.EventData.Language.EQ(s.String(args.Language)),
+				s.OR(
+					t.EventData.Name.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
+					t.Event.Location.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
+				),
 			),
-		),
-	).LIMIT(
-		int64(args.Limit),
-	).OFFSET(
-		int64(args.Page),
-	).ORDER_BY(
-		s.CASE().
-			WHEN(
-				t.EventData.Name.EQ(s.String(args.Query)),
-			).THEN(s.Int64(1)).
-			WHEN(
-				t.EventData.Name.LIKE(s.String(fmt.Sprintf("%s%%", args.Query))),
-			).THEN(s.Int64(2)).
-			WHEN(
-				t.EventData.Name.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
-			).THEN(s.Int64(3)).
-			WHEN(
-				t.Event.Location.EQ(s.String(args.Query)),
-			).THEN(s.Int64(1)).
-			WHEN(
-				t.Event.Location.LIKE(s.String(fmt.Sprintf("%s%%", args.Query))),
-			).THEN(s.Int64(2)).
-			WHEN(
-				t.Event.Location.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
-			).THEN(s.Int64(3)),
-		t.EventData.Name,
-		t.Event.Location,
-		t.Event.ID,
-	)
+		).
+		LIMIT(
+			int64(args.Limit),
+		).
+		OFFSET(
+			int64(args.Page),
+		).
+		ORDER_BY(
+			s.
+				CASE().
+				WHEN(
+					t.EventData.Name.EQ(s.String(args.Query)),
+				).
+				THEN(s.Int64(1)).
+				WHEN(
+					t.EventData.Name.LIKE(s.String(fmt.Sprintf("%s%%", args.Query))),
+				).
+				THEN(s.Int64(2)).
+				WHEN(
+					t.EventData.Name.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
+				).
+				THEN(s.Int64(3)).
+				WHEN(
+					t.Event.Location.EQ(s.String(args.Query)),
+				).
+				THEN(s.Int64(1)).
+				WHEN(
+					t.Event.Location.LIKE(s.String(fmt.Sprintf("%s%%", args.Query))),
+				).
+				THEN(s.Int64(2)).
+				WHEN(
+					t.Event.Location.LIKE(s.String(fmt.Sprintf("%%%s%%", args.Query))),
+				).
+				THEN(s.Int64(3)),
+			t.EventData.Name,
+			t.Event.Location,
+			t.Event.ID,
+		)
 
 	return d.scanEvents(stmt)
 }
