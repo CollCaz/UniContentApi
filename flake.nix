@@ -50,6 +50,7 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             nixpkgs-fmt
+            just
 
             go
             gopls
