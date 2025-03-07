@@ -24,7 +24,8 @@ func (s *Server) Run() {
 	s.logger.Info("Registering routes...")
 	s.RegisterRoutes()
 	s.logger.Info("Running server...")
-	s.server.Run()
+	err := s.server.Run()
+	s.logger.Error(err.Error())
 }
 
 func InitServer(args NewServerArgs) Server {
