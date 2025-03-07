@@ -5,9 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	d "github.com/CollCaz/UniSite/database"
+	"github.com/CollCaz/UniSite/server"
 	"github.com/charmbracelet/log"
-	"github.com/go-fuego/fuego"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -19,18 +18,10 @@ func main() {
 	handler := log.New(os.Stderr)
 	logger := slog.New(handler)
 
-	s = fuego.NewServer(
-		fuego.WithLogHandler(handler),
-	)
-	a := &app{
-		logger: logger,
-		db: d.NewDataService(d.NewDataServiceArgs{
-			Db:     db,
-			Logger: logger,
-		}),
-	}
-
-	a.registerRoutes()
+	s := server.InitServer(server.NewServerArgs{
+		Logger: logger,
+		Db:     db,
+	})
 
 	s.Run()
 }
@@ -48,18 +39,4 @@ func openDb() *sql.DB {
 	}
 
 	return db
-}
-
-type app struct {
-	logger *slog.Logger
-	db     *d.DataService
-}
-
-type MainAboutSection struct {
-	Title   string
-	Content string
-}
-
-func (a *app) helloWorld(c fuego.ContextNoBody) (string, error) {
-	return "Hello, World!", nil
 }
