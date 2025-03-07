@@ -18,6 +18,9 @@ CREATE TABLE event_data (
     language TEXT NOT NULL,
     name TEXT NOT NULL,
     content TEXT NOT NULL,
+	
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (event_id) REFERENCES event(id)
 );
@@ -26,11 +29,19 @@ CREATE TRIGGER update_event_timestamp
 AFTER UPDATE ON event
 FOR EACH ROW
 BEGIN
-    UPDATE department
+    UPDATE event
     SET updated_at = CURRENT_TIMESTAMP
     WHERE id = OLD.id;
 END;
 
+CREATE TRIGGER update_event_data_timestamp
+AFTER UPDATE ON event_data
+FOR EACH ROW
+BEGIN
+    UPDATE event_data
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = OLD.id;
+END;
 -- +goose StatementEnd
 
 -- +goose Down
