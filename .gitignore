@@ -32,7 +32,6 @@ doc/
 # .env file
 .env*
 .direnv/
-.air.toml
 
 # Project build
 main
