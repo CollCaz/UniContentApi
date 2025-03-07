@@ -46,6 +46,7 @@ func InitServer(args NewServerArgs) Server {
 	})
 
 	return Server{
+		logger: args.Logger,
 		server: server,
 		db:     db,
 	}
