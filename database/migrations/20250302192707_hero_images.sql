@@ -4,9 +4,11 @@ CREATE TABLE hero_images (
     id INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
     sub_title TEXT NOT NULL,
-    image_url TEXT NOT NULL,
+    image_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (image_id) REFERENCES image(id)
 );
 
 CREATE TRIGGER update_hero_images_timestamp

@@ -5,10 +5,12 @@ CREATE TABLE event (
     start_date TIMESTAMP,
     end_date TIMESTAMP,
     location TEXT NOT NULL,
-    poster_url TEXT NOT NULL,
+    poster_id INTEGER NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (poster_id) REFERENCES image(id)
 );
 
 
