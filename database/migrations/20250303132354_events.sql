@@ -10,7 +10,7 @@ CREATE TABLE event (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
 
-    FOREIGN KEY (poster_id) REFERENCES image(id)
+    FOREIGN KEY (poster_id) REFERENCES image (id)
 );
 
 
@@ -20,11 +20,11 @@ CREATE TABLE event_data (
     language TEXT NOT NULL,
     name TEXT NOT NULL,
     content TEXT NOT NULL,
-	
+
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
 
-    FOREIGN KEY (event_id) REFERENCES event(id)
+    FOREIGN KEY (event_id) REFERENCES event (id)
 );
 -- +goose StatementEnd
 

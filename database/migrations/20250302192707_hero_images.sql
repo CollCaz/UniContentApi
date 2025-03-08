@@ -8,7 +8,7 @@ CREATE TABLE hero_images (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
 
-    FOREIGN KEY (image_id) REFERENCES image(id)
+    FOREIGN KEY (image_id) REFERENCES image (id)
 );
 -- +goose StatementEnd
 
@@ -16,4 +16,3 @@ CREATE TABLE hero_images (
 -- +goose StatementBegin
 DROP TABLE IF EXISTS hero_images;
 -- +goose StatementEnd
-

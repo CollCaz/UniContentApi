@@ -13,4 +13,3 @@ CREATE TABLE faculty (
 -- +goose StatementBegin
 DROP TABLE IF EXISTS faculty;
 -- +goose StatementEnd
-

@@ -8,7 +8,7 @@ CREATE TABLE department (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
 
-    FOREIGN KEY (faculty_id) REFERENCES faculty(id)
+    FOREIGN KEY (faculty_id) REFERENCES faculty (id)
 );
 -- +goose StatementEnd
 
@@ -16,4 +16,3 @@ CREATE TABLE department (
 -- +goose StatementBegin
 DROP TABLE IF EXISTS department;
 -- +goose StatementEnd
-

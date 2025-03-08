@@ -15,7 +15,10 @@
   programs.mdformat.enable = true;
 
   # Sql
-  programs.sqlfluff.enable = true;
+  programs.sqlfluff = {
+    enable = true;
+    dialect = "postgres";
+  };
 
   # Nix
   programs.nixfmt.enable = true;
