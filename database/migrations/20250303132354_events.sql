@@ -7,8 +7,8 @@ CREATE TABLE event (
     location TEXT NOT NULL,
     poster_id INTEGER NOT NULL,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
 
     FOREIGN KEY (poster_id) REFERENCES image(id)
 );
@@ -21,29 +21,11 @@ CREATE TABLE event_data (
     name TEXT NOT NULL,
     content TEXT NOT NULL,
 	
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
 
     FOREIGN KEY (event_id) REFERENCES event(id)
 );
-
-CREATE TRIGGER update_event_timestamp
-AFTER UPDATE ON event
-FOR EACH ROW
-BEGIN
-    UPDATE event
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = OLD.id;
-END;
-
-CREATE TRIGGER update_event_data_timestamp
-AFTER UPDATE ON event_data
-FOR EACH ROW
-BEGIN
-    UPDATE event_data
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = OLD.id;
-END;
 -- +goose StatementEnd
 
 -- +goose Down

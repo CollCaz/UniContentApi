@@ -5,18 +5,9 @@ CREATE TABLE image (
     title TEXT NOT NULL,
     image_url TEXT NOT NULL,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
-
-CREATE TRIGGER update_image_timestamp
-AFTER UPDATE ON image
-FOR EACH ROW
-BEGIN
-    UPDATE image
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = OLD.id;
-END;
 -- +goose StatementEnd
 
 -- +goose Down
