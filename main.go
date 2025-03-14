@@ -8,7 +8,8 @@ import (
 	"github.com/CollCaz/UniSite/server"
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -28,10 +29,11 @@ func main() {
 
 func openDb() *sql.DB {
 	dbString := os.Getenv("GOOSE_DBSTRING")
-	db, err := sql.Open("sqlite3", dbString)
+	db, err := sql.Open("pgx", dbString)
 	if err != nil {
 		panic("Could not open db")
 	}
+	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
