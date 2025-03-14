@@ -1,9 +1,9 @@
 package database
 
 import (
-	"github.com/CollCaz/UniSite/database/gen/model"
-	t "github.com/CollCaz/UniSite/database/gen/table"
-	s "github.com/go-jet/jet/v2/sqlite"
+	"github.com/CollCaz/UniSite/database/gen/unicontentdb/public/model"
+	t "github.com/CollCaz/UniSite/database/gen/unicontentdb/public/table"
+	s "github.com/go-jet/jet/v2/postgres"
 )
 
 type AboutSection struct {

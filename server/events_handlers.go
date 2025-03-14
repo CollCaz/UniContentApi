@@ -28,7 +28,7 @@ func (s *Server) SearchAllEvents(c fuego.ContextWithBody[d.SearchAllEventArgs]) 
 	return s.db.SearchAllEvents(body)
 }
 
-func (s *Server) PostEvent(c fuego.ContextWithBody[d.Event]) (d.Event, error) {
+func (s *Server) PostEvent(c fuego.ContextWithBody[d.InsertEventArgs]) (d.Event, error) {
 	body, err := c.Body()
 	if err != nil {
 		return d.Event{}, err

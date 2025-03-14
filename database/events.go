@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CollCaz/UniSite/database/gen/model"
-	t "github.com/CollCaz/UniSite/database/gen/table"
-	s "github.com/go-jet/jet/v2/sqlite"
+	"github.com/CollCaz/UniSite/database/gen/unicontentdb/public/model"
+	t "github.com/CollCaz/UniSite/database/gen/unicontentdb/public/table"
+	s "github.com/go-jet/jet/v2/postgres"
 )
 
 type EventData struct {
@@ -22,6 +22,7 @@ type Event struct {
 	EndDate   time.Time
 	Location  string
 	PosterUrl string `validate:"url"`
+	PosterId  int32  `json:",omitempty"`
 	EventData EventData
 }
 
@@ -30,6 +31,7 @@ type Events []Event
 type joinedEventModel struct {
 	model.Event
 	model.EventData
+	model.Image
 }
 
 func (d *DataService) scanEvent(stmt s.Statement) (Event, error) {
@@ -42,13 +44,13 @@ func (d *DataService) scanEvent(stmt s.Statement) (Event, error) {
 	}
 
 	event := Event{
-		Id:        *dest.Event.ID,
+		Id:        dest.Event.ID,
 		StarDate:  *dest.StartDate,
 		EndDate:   *dest.EndDate,
 		Location:  dest.Location,
-		PosterUrl: dest.PosterURL,
+		PosterUrl: dest.ImageURL,
 		EventData: EventData{
-			Id:       *dest.EventData.ID,
+			Id:       dest.EventData.ID,
 			Name:     dest.Name,
 			Content:  dest.Content,
 			Language: dest.Language,
@@ -73,7 +75,7 @@ func (d *DataService) scanEvents(stmt s.Statement) (Events, error) {
 			StarDate:  *event.StartDate,
 			EndDate:   *event.EndDate,
 			Location:  event.Location,
-			PosterUrl: event.PosterURL,
+			PosterUrl: event.ImageURL,
 			EventData: EventData{
 				Name:     event.Name,
 				Content:  event.Content,
@@ -95,35 +97,53 @@ func (d *DataService) GetAllEvents(args GetAllEventsArgs) (Events, error) {
 			t.Event.ID,
 			t.Event.StartDate,
 			t.Event.EndDate,
-			t.Event.PosterURL,
 			t.EventData.ID,
 			t.EventData.Name,
 			t.EventData.Content,
 			t.EventData.Language,
+			t.Image.ImageURL,
+			t.Image.Title,
 		).FROM(
-		t.Event.INNER_JOIN(t.EventData, t.Event.ID.EQ(t.EventData.EventID)),
+		t.Event.INNER_JOIN(t.EventData, t.Event.ID.EQ(t.EventData.EventID)).
+			INNER_JOIN(t.Image, t.Event.PosterID.EQ(t.HeroImages.ImageID)),
 	).WHERE(t.EventData.Language.EQ(s.String(args.Language)))
 
 	return d.scanEvents(stmt)
 }
 
-func (d *DataService) InsertEvent(e Event) (Event, error) {
+type InsertEventArgs struct {
+	Event
+	model.Image
+}
+
+func (d *DataService) InsertEvent(e InsertEventArgs) (Event, error) {
+	insertImageCte := t.Image.
+		INSERT(
+			t.Image.Title,
+			t.Image.ImageURL,
+		).VALUES(
+		e.ImageURL,
+		e.Title,
+	).RETURNING(
+		t.Image.ID,
+	)
+
 	insertEventStmt := t.Event.
 		INSERT(
 			t.Event.StartDate,
 			t.Event.EndDate,
-			t.Event.PosterURL,
+			t.Event.PosterID,
 			t.Event.Location,
 		).VALUES(
 		e.StarDate,
 		e.EndDate,
-		e.PosterUrl,
+		insertImageCte,
 		e.Location,
 	).RETURNING(
 		t.Event.ID,
 		t.Event.StartDate,
 		t.Event.EndDate,
-		t.Event.PosterURL,
+		t.Event.PosterID,
 	)
 
 	event, err := d.scanEvent(insertEventStmt)
@@ -164,11 +184,10 @@ type UpdateEventArgs struct {
 }
 
 func (d *DataService) UpdateEvent(args UpdateEventArgs) (Event, error) {
-	insertEventStmt := t.Event.
+	updateEventStmt := t.Event.
 		UPDATE(
 			t.Event.StartDate,
 			t.Event.EndDate,
-			t.Event.PosterURL,
 			t.Event.Location,
 		).
 		SET(
@@ -182,10 +201,9 @@ func (d *DataService) UpdateEvent(args UpdateEventArgs) (Event, error) {
 			t.Event.ID,
 			t.Event.StartDate,
 			t.Event.EndDate,
-			t.Event.PosterURL,
 		)
 
-	event, err := d.scanEvent(insertEventStmt)
+	event, err := d.scanEvent(updateEventStmt)
 	if err != nil {
 		return Event{}, err
 	}
@@ -232,14 +250,16 @@ func (d *DataService) SearchAllEvents(args SearchAllEventArgs) (Events, error) {
 		SELECT(
 			t.Event.StartDate,
 			t.Event.EndDate,
-			t.Event.PosterURL,
 			t.Event.Location,
 			t.EventData.Name,
 			t.EventData.Content,
 			t.EventData.Language,
+			t.Image.ImageURL,
 		).
 		FROM(
+			t.Event,
 			t.Event.INNER_JOIN(t.EventData, t.Event.ID.EQ(t.EventData.EventID)),
+			t.Event.INNER_JOIN(t.Image, t.Event.PosterID.EQ(t.Image.ID)),
 		).
 		WHERE(
 			s.AND(
